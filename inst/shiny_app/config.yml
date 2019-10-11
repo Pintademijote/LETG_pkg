@@ -1,0 +1,9 @@
+default:
+  trials: 5
+  dataset: "data.csv"
+  path_save: "/home/lemasle_pg/Documents/data/"
+  
+  
+production:
+  trials: 30
+  dataset: "data.csv"

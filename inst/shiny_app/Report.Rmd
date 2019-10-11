@@ -1,0 +1,63 @@
+---
+title: "Report"
+author: ""
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    theme: yeti
+    highlight: textmate
+    toc: true
+    toc_float: true
+    toc_depth: 5
+  # prettydoc::html_pretty:
+  # rmdformats::html_docco:
+  #   highlight: github
+  #   theme: architect
+  pdf_document: default
+params:
+  x: NA
+  date_pred: NA
+---
+
+```{r setup, include=FALSE, out.width = '80%'}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Plots
+
+
+## How to
+
+* occupancy map of the landscape where you sampled your species, in ASCII format
+* the corresponding coordinates of your sampling points in CSV
+  + The csv must be formatted like:
+    ```{r csv format, echo=F}
+    knitr::kable(summary(params$x))
+    ```
+  
+Truc truc truc
+
+```{r plotobs scale, echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(params$x,aes_string(x=params$date_pred))+geom_histogram()
+```
+
+# References
+
+<script>
+    $(document).ready(function() {
+      $items = $('div#TOC li');
+      $items.each(function(idx) {
+        num_ul = $(this).parentsUntil('#TOC').length;
+        $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+      });
+
+    });
+</script>
+
+
+<style>
+body {
+text-align: justify}
+</style>
+
