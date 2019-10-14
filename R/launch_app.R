@@ -4,10 +4,9 @@
 #' @export
 
 launch_app <- function() {
-  appDir <- system.file("shiny_app", package = "LETGmod")
-  if (appDir == "") {
-    stop("Could not find myapp. Try re-installing `mypackage`.", call. = FALSE)
+  appdir <- system.file("shiny_app", package = "LETGmod")
+  if (appdir == "") {
+    stop("It appears that the app is not install, re-install `mypackage`.", call. = FALSE)
   }
-  
-  shiny::runApp(appDir, display.mode = "normal")
+  shiny::runApp(appdir, display.mode = "normal")
 }
