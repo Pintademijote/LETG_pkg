@@ -1,6 +1,6 @@
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 60 * 1024 ^ 2)
-  volumes <- getVolumes()
+  volumes <- shinyFiles::getVolumes()
   ################
   ######Input
   ###############
@@ -25,12 +25,12 @@ server <- function(input, output, session) {
       }
   })
   
-  shinyDirChoose(
+  shinyFiles::shinyDirChoose(
     input, "directory_rast_pred", roots = volumes, session = session)
   
   rasters_pred <- reactive({
     ref  <- list.files(
-      paste(as.character(parseDirPath(volumes, input$directory_rast_pred)),
+      paste(as.character(shinyFiles::parseDirPath(volumes, input$directory_rast_pred)),
             "/", sep = ""), full.names = T)
     raster::stack(ref)
   })
@@ -52,7 +52,7 @@ server <- function(input, output, session) {
   })
   
   output$slider_tmin <- renderUI({
-    sliderTextInput(
+    shinyWidgets::sliderTextInput(
       inputId = "slider_date",
       label = "Your choice:",
       grid = TRUE,
@@ -110,22 +110,22 @@ server <- function(input, output, session) {
       cost <- cost()
       k <- input$k
       #Cluster
-      cl <- makeCluster(input$nb_core, type = "SOCK")
-      registerDoSNOW(cl)
-      clusterExport(cl,
+      cl <- parallel::makeCluster(input$nb_core, type = "SOCK")
+      doSNOW::registerDoSNOW(cl)
+      parallel::clusterExport(cl,
                     list("SVM_parral", "variable", "cross", 
                          "kernel", "epsilon", "k",
                          "cost", "tune.control", "tune.svm",
                          "svm"), 
                     envir = environment())
       #parLapply
-      models <- parLapply(cl, temperatures, fun = function(x){
+      models <- parallel::parLapply(cl, temperatures, fun = function(x){
         poulou <- SVM_parral(Yvar = x, variable = variable, cross = cross, 
                              k = k, cost = cost, kernel = kernel, 
                              epsilon = epsilon)
         return(poulou)
       })
-      stopCluster(cl)
+      parallel::stopCluster(cl)
       names(models) <- colnames(temperatures)
     }
     #Output models
@@ -176,15 +176,15 @@ server <- function(input, output, session) {
   ##Plots
   ###############
   
-  output$plot_var <- renderPlotly({
+  output$plot_var <- plotly::renderPlotly({
     ggplot(merge_x_var(), 
-           aes_string(x = input$date_pred, y = input$variable_pred))
-    + geom_point()
+           aes_string(x = input$date_pred, y = input$variable_pred))+ 
+      geom_point()
   })
   
-  output$hist_x <- renderPlotly({
-    ggplot(x(), aes_string(x = input$date_pred))
-    + geom_histogram()
+  output$hist_x <- plotly::renderPlotly({
+    ggplot(x(), aes_string(x = input$date_pred))+ 
+      geom_histogram()
     })
   
   output$pred_map <- renderLeaflet({

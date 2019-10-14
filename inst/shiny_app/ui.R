@@ -8,7 +8,7 @@ ui <- fluidPage(
                  fileInput("tmin", h5("tmin")),
                  uiOutput("slider_tmin"),
                  fileInput("variables", h5("variables")),
-                 shinyDirButton("directory_rast_pred",
+                 shinyFiles::shinyDirButton("directory_rast_pred",
                                 "Patch to the folder of your rasters", 
                                 "Please select a folder",
                                 FALSE),
@@ -34,11 +34,16 @@ ui <- fluidPage(
 
                ),
                mainPanel(
-                 uiOutput("date_pred") %>% withSpinner(color = "#0dc5c1"),
-                 uiOutput("variable_pred") %>% withSpinner(color = "#0dc5c1"),
-                 plotlyOutput("hist_x") %>% withSpinner(color = "#0dc5c1"),
-                 plotlyOutput("plot_var") %>% withSpinner(color = "#0dc5c1"),
-                 leafletOutput("pred_map", width = "100%", height = 600) %>% withSpinner(color = "#0dc5c1")
+                 uiOutput("date_pred") %>% 
+                   shinycssloaders::withSpinner(color = "#0dc5c1"),
+                 uiOutput("variable_pred") %>% 
+                   shinycssloaders::withSpinner(color = "#0dc5c1"),
+                 plotly::plotlyOutput("hist_x") %>% 
+                   shinycssloaders::withSpinner(color = "#0dc5c1"),
+                 plotly::plotlyOutput("plot_var") %>% 
+                   shinycssloaders::withSpinner(color = "#0dc5c1"),
+                 leafletOutput("pred_map", width = "100%", height = 600) %>% 
+                   shinycssloaders::withSpinner(color = "#0dc5c1")
                )
              )
 
