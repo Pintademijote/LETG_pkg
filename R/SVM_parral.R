@@ -1,4 +1,3 @@
-#' @import caret e1071
 #' @export
 
 SVM_parral <- function(Yvar, variable, k=5, 
@@ -18,8 +17,8 @@ SVM_parral <- function(Yvar, variable, k=5,
   ### SPLIT DATA INTO K FOLDS ###
   df1$fold <- caret::createFolds(1:nrow(df1), k = k, list = FALSE)
   ### K-FOLD VALIDATION ###
-  tc <- tune.control(nrepeat = 10, sampling = "cross", cross = cross)
-  mdl <- tune.svm(Y ~ ., data = data_test, cost = cost, epsilon = epsilon, 
+  tc <- e1071::tune.control(nrepeat = 10, sampling = "cross", cross = cross)
+  mdl <- e1071::tune.svm(Y ~ ., data = data_test, cost = cost, epsilon = epsilon, 
                   kernel = kernel, tune.control = tc)
   mdl <- mdl$best.model
   CO <- mdl$cost
@@ -27,7 +26,7 @@ SVM_parral <- function(Yvar, variable, k=5,
   out <- lapply(unique(df1$fold), FUN = function(x){
     deve <- df1[df1$fold != x, ]
     test <- df1[df1$fold == x, ]
-    MODpred <- svm(Y ~ ., data = deve, scale = T, 
+    MODpred <- e1071::svm(Y ~ ., data = deve, scale = T, 
                    cost = CO, epsilon = EPS, decision.values = TRUE,
                    probability = TRUE)
     pred <- predict(MODpred, test, decision.values = TRUE, probability = TRUE)

@@ -115,8 +115,7 @@ server <- function(input, output, session) {
       parallel::clusterExport(cl,
                     list("SVM_parral", "variable", "cross", 
                          "kernel", "epsilon", "k",
-                         "cost", "tune.control", "tune.svm",
-                         "svm"), 
+                         "cost"), 
                     envir = environment())
       #parLapply
       models <- parallel::parLapply(cl, temperatures, fun = function(x){
@@ -191,7 +190,7 @@ server <- function(input, output, session) {
     if (model_save$pred_Bolean == F) return()
     colfunc <- colorRampPalette(c("yellow", "red"))
     pal <- colorNumeric(c("#ffffff", colfunc(15)), 
-                        values(model_save$pred[[input$date_pred]]),
+                        raster::values(model_save$pred[[input$date_pred]]),
                           na.color = "transparent")
     leaflet() %>%
       addTiles() %>%
@@ -202,7 +201,7 @@ server <- function(input, output, session) {
         overlayGroups = c("Predictions"),
         options = layersControlOptions(collapsed = FALSE)
       ) %>%
-      addLegend(pal = pal, values = values(model_save$pred[[input$date_pred]]),
+      addLegend(pal = pal, values = raster::values(model_save$pred[[input$date_pred]]),
                   title = "Predictions")
     })
     

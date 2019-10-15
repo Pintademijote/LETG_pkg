@@ -1,4 +1,3 @@
-#' @import raster
 #' @export
 
 product_raster <- function(model, predictor){
