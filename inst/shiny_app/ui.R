@@ -1,6 +1,7 @@
 ui <- fluidPage(
-  tabsetPanel(
-    tabPanel("SVM", Fluid = TRUE,
+  navbarPage(title = div(img(src='index.png',style="margin-top: -15px; padding-right:0px;padding-bottom:20px", height = 70)),
+             windowTitle="LETG SVM app",
+    tabPanel("Model", Fluid = TRUE,
              titlePanel("SVM"),
              sidebarLayout(
                sidebarPanel(
@@ -8,30 +9,34 @@ ui <- fluidPage(
                  fileInput("tmin", h5("tmin")),
                  uiOutput("slider_tmin"),
                  fileInput("variables", h5("variables")),
-                 shinyFiles::shinyDirButton("directory_rast_pred",
-                                "Patch to the folder of your rasters", 
-                                "Please select a folder",
-                                FALSE),
+                 # shinyFiles::shinyDirButton("directory_rast_pred",
+                 #                "Patch to the folder of your rasters", 
+                 #                "Please select a folder",
+                 #                FALSE),
+                 fileInput("tifs",
+                           label="Upload tifs here",
+                           multiple = TRUE),
                  h3("Tune the parameters"),
                  selectInput("kernel",  h5("Type of kernel"), choices = c("radial", "linear")),
-                 numericInput("nb_cross", "Number of cross:", 5, min = 1, max = Inf),
-                 numericInput("k", "Number of k:", 5, min = 1, max = Inf),
-                 numericInput("nb_seq_epsilon", "Observations:", 0.05, min = 0, max = 1, step = 0.01),
+                 numericInput("nb_cross", "Number of cross:", config$nb_cross, min = 1, max = Inf),
+                 numericInput("k", "Number of k:", config$nb_k, min = 1, max = Inf),
+                 numericInput("nb_seq_epsilon", "Epsilon Step:", config$epsilon_step, min = 0, max = 1, step = 0.01),
                  sliderInput(inputId = "seq_epsilon",
                              label = "Epsilon:",
                              min = 0,
                              max = 1,
                              value = c(0, 1)),
                  sliderInput(inputId = "seq_cost",
-                             label = "Epsilon:",
-                             min = -3,
-                             max = 8,
+                             label = "Cost:",
+                             min = config$cost_min,
+                             max = config$cost_max,
                              value = c(-3, 8)),
-                 numericInput("nb_core", "Observations:", 1, min = 1, max = parallel::detectCores(), 1),
+                 h3("Parallelize"),
+                 numericInput("nb_core", "Number of thread(s) to use:", 1, min = 1, max = parallel::detectCores(), 1),
                  shinyWidgets::switchInput(inputId = "parallelize", value = FALSE),
+                 br(),
                  actionButton("run", "Run Analysis"),
-                 downloadButton("report", "Generate report")
-
+                 uiOutput("report_b")
                ),
                mainPanel(
                  uiOutput("date_pred") %>% 

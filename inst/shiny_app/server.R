@@ -1,6 +1,7 @@
 server <- function(input, output, session) {
-  options(shiny.maxRequestSize = 60 * 1024 ^ 2)
-  volumes <- shinyFiles::getVolumes()
+  options(shiny.maxRequestSize = 60 * 1024 ^ 2,
+          shiny.reactlog=TRUE)
+  # volumes <- shinyFiles::getVolumes()
   ################
   ######Input
   ###############
@@ -25,16 +26,20 @@ server <- function(input, output, session) {
       }
   })
   
-  shinyFiles::shinyDirChoose(
-    input, "directory_rast_pred", roots = volumes, session = session)
-  
   rasters_pred <- reactive({
-    ref  <- list.files(
-      paste(as.character(shinyFiles::parseDirPath(volumes, input$directory_rast_pred)),
-            "/", sep = ""), full.names = T)
-    raster::stack(ref)
+    if(is.null(input$tifs$datapath)){
+      ref <- list.files("./data/MNT/",full.names = T)
+      ref <- raster::stack(ref)
+      ref
+    }else{
+      ref  <- lapply(input$tifs$datapath, function(x){raster::raster(x)})
+      print(stringi::stri_extract_first(str = input$tifs$name, regex = ".*(?=\\.)"))
+      ref <- raster::stack(ref)
+      names(ref) <- stringi::stri_extract_first(str = input$tifs$name, regex = ".*(?=\\.)")
+      ref
+    }
   })
-  
+
   merge_x_var <- reactive({
     cbind(x(), variable())
   })
@@ -52,6 +57,7 @@ server <- function(input, output, session) {
   })
   
   output$slider_tmin <- renderUI({
+    pred_Bolean <- F
     shinyWidgets::sliderTextInput(
       inputId = "slider_date",
       label = "Your choice:",
@@ -82,9 +88,16 @@ server <- function(input, output, session) {
   ###############
   
   observeEvent(input$run, {
+    showModal(modalDialog(
+      title = "Models processing",
+      "Shiny app is unavailable during computation",
+      easyClose = FALSE,
+      footer = NULL))
+    model_save$data <- NULL
+    model_save$pred <- NULL
     pred_df <- data.table::fread(paste0(config$path_save, "pred_df.csv"))
     perf_df <- data.table::fread(paste0(config$path_save, "perf_df.csv"))
-    
+    print("start model")
     if (input$parallelize == F){
       models <- lapply(x()[, which(input$slider_date[1] == colnames(x())):
                              which(input$slider_date[2] == colnames(x()))],
@@ -117,6 +130,8 @@ server <- function(input, output, session) {
                          "kernel", "epsilon", "k",
                          "cost"), 
                     envir = environment())
+      parallel::clusterEvalQ(cl, {library(dplyr)
+        })
       #parLapply
       models <- parallel::parLapply(cl, temperatures, fun = function(x){
         poulou <- SVM_parral(Yvar = x, variable = variable, cross = cross, 
@@ -127,29 +142,51 @@ server <- function(input, output, session) {
       parallel::stopCluster(cl)
       names(models) <- colnames(temperatures)
     }
+    print("end model")
     #Output models
     model_save$data <- models
     #Predictions
     mode_svm <- list()
     for (i in 1:length(model_save$data)){
-      mode_svm[i] <- model_save$data[[i]]$svm_model
+      mode_svm[[i]] <- model_save$data[[i]]$svm_model
     }
     names(mode_svm) <- names(model_save$data)
-    mod_pred <- lapply(X = mode_svm, FUN = function(y){
-      product_raster(model = y, predictor = rasters_pred())
-    })
+    if (input$parallelize == F){
+      mod_pred <- lapply(X = mode_svm, FUN = function(y){
+        product_raster(model = y, predictor = rasters_pred())
+      })
+    }
+    if (input$parallelize == T){
+      
+      rast_pred <- rasters_pred()
+      print(rast_pred)
+      #Cluster
+      cl <- parallel::makeCluster(input$nb_core, type = "SOCK")
+      doSNOW::registerDoSNOW(cl)
+      parallel::clusterExport(cl,
+                              list("rast_pred","product_raster"), 
+                              envir = environment())
+      parallel::clusterEvalQ(cl, {library(e1071)})
+      #parLapply
+      mod_pred <- parallel::parLapply(cl, mode_svm, fun = function(y){
+        product_raster(model = y, predictor = rast_pred)
+      })
+      parallel::stopCluster(cl)
+    }
     mod_pred <- raster::brick(mod_pred)
     names(mod_pred) <- names(model_save$data)
     #Output predictions
     model_save$pred <- mod_pred
     model_save$pred_Bolean <- T
+    print("end pred")
     #Saving output
     date <- gsub("X", "", names(model_save$data))
     temp_don <- do.call(rbind, lapply(model_save$data, function(x){
       x$DON
     }))
+    rownames(temp_don) = NULL
     temp_don$date <- do.call(c, lapply(date, function(x){
-      rep(x, nrow(model_save$data[[1]]$DON))
+      rep(x, nrow(model_save$data[[parent.frame()$i[]]]$DON))
       }))
     pred_df <- rbind(
       temp_don[!(temp_don$date %in% pred_df$date), ], 
@@ -157,7 +194,9 @@ server <- function(input, output, session) {
     temp_perf <- data.frame(rmse = sapply(model_save$data, function(x){
       x$rmse
     })
-    , date <- date, row.names = NULL)
+    , date = date, row.names = NULL)
+    print(head(temp_perf))
+    print(head(perf_df))
     perf_df <- rbind(
       temp_perf[!(temp_perf$date %in% perf_df$date), ], 
       as.data.frame(perf_df))
@@ -209,18 +248,26 @@ server <- function(input, output, session) {
     ##Download
     ###############
   
+  output$report_b <- renderUI({
+    if (model_save$pred_Bolean == F) return(NULL)else{
+      downloadButton("report", "Generate report")
+    }
+  })
+  
   output$report <- downloadHandler(
     filename = "Report.html",
     content = function(file) {
       param <- list(x = isolate(x()[, which(input$slider_date[1] == colnames(x())):
                                       which(input$slider_date[2] == colnames(x()))]),
-                     date_pred=isolate(input$date_pred))
+                    variables = variable(),
+                    merge_x_var=merge_x_var(),
+                     date_pred = isolate(input$date_pred),
+                    pred = model_save$pred)
       temp_report <- file.path(tempdir(), "Report.Rmd")
       file.copy("Report.Rmd", temp_report, overwrite = TRUE)
       rmarkdown::render(temp_report, output_file = file,
                         params = param,
-                        envir = new.env(parent = globalenv())
-      )
+                        envir = new.env(parent = globalenv()))
     }
   )
   

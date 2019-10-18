@@ -3,6 +3,3 @@
 export(SVM_parral)
 export(launch_app)
 export(product_raster)
-importFrom(e1071,svm)
-importFrom(e1071,tune.control)
-importFrom(e1071,tune.svm)

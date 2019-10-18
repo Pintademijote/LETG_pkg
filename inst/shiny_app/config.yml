@@ -1,5 +1,12 @@
 default:
   path_save: "/home/lemasle_pg/Documents/data/"
-  
+  nb_cross: 5
+  nb_k: 5
+  kernel: "radial"
+  epsilon_step: 0.05
+  epsi_max: 1
+  epsi_min: 0
+  cost_max: 8
+  cost_min: -3
 server:
-  path_save: "/home/lemasle_pg/Documents/data/"
+  path_save: "./data/server/"
