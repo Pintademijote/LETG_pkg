@@ -25,7 +25,7 @@ Imports:
     shinyWidgets,
     shinycssloaders,
     data.table,
-    rmarkdown
+    rmarkdown,
     purrr,
     kableExtra
 Suggests: 
