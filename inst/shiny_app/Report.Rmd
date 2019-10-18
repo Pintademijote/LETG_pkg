@@ -1,0 +1,88 @@
+---
+title: "Report"
+author: ""
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    theme: yeti
+    highlight: textmate
+    toc: true
+    toc_float: true
+    toc_depth: 5
+    pdf_document: default
+params:
+  x: NA
+  date_pred: NA
+  pred: NA
+  variables: NA
+  merge_x_var: NA
+---
+
+```{r include=FALSE}
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(purrr)
+
+sum_temp=as.data.frame(do.call(cbind, lapply(params$x, summary)))
+sum_var=as.data.frame(do.call(cbind, lapply(params$variables, summary)))
+```
+
+# Summary
+## Temperatures
+  
+```{r results="asis", echo=F}
+if(ncol(sum_temp) <= 5){
+kable_styling(knitr::kable(sum_temp, booktabs = T))
+}else{
+split(1:ncol(sum_temp), sort(rep_len(1:5, ncol(sum_temp)))) %>%
+map(~select(sum_temp, .)) %>%
+map(kable, format = "html", booktabs = T) %>%
+map(kable_styling) %>%
+walk(print)
+}
+```
+
+## Variables
+
+```{r results="asis", echo=F}
+kable_styling(knitr::kable(sum_var, booktabs = T))
+```
+
+# Predictions
+
+```{r pred, echo=FALSE, message=FALSE, warning=FALSE}
+plot(params$pred)
+```
+
+# `r params$date_pred`
+
+```{r points, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(params$x,aes_string(x=params$date_pred))+geom_histogram()
+
+for (i in colnames(params$variables)) {
+  print(ggplot(params$merge_x_var,aes_string(x=params$date_pred, y=i))+
+    geom_point())
+}
+```
+
+
+# References
+
+<script>
+    $(document).ready(function() {
+      $items = $('div#TOC li');
+      $items.each(function(idx) {
+        num_ul = $(this).parentsUntil('#TOC').length;
+        $(this).css({'text-indent': num_ul * 10, 'padding-left': 0});
+      });
+
+    });
+</script>
+
+
+<style>
+body {
+text-align: justify}
+</style>
+

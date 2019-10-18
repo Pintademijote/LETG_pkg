@@ -1,0 +1,32 @@
+Package: LETGmod
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.1
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Depends:
+Imports:
+    doSNOW,
+    parallel,
+    dplyr,
+    e1071,
+    ggplot2,
+    rgdal,
+    raster,
+    leaflet,
+    plotly,
+    shiny,
+    shinyWidgets,
+    shinycssloaders,
+    data.table,
+    rmarkdown
+    purrr,
+    kableExtra
+Suggests: 
+    testthat (>= 2.1.0)
