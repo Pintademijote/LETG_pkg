@@ -95,8 +95,8 @@ server <- function(input, output, session) {
       footer = NULL))
     model_save$data <- NULL
     model_save$pred <- NULL
-    pred_df <- data.table::fread(paste0(config$path_save, "pred_df.csv"))
-    perf_df <- data.table::fread(paste0(config$path_save, "perf_df.csv"))
+#    pred_df <- data.table::fread(paste0(config$path_save, "pred_df.csv"))
+#    perf_df <- data.table::fread(paste0(config$path_save, "perf_df.csv"))
     print("start model")
     if (input$parallelize == F){
       models <- lapply(x()[, which(input$slider_date[1] == colnames(x())):
@@ -201,8 +201,8 @@ server <- function(input, output, session) {
       temp_perf[!(temp_perf$date %in% perf_df$date), ], 
       as.data.frame(perf_df))
     #Writing results
-    data.table::fwrite(pred_df, file = paste0(config$path_save, "pred_df.csv"))
-    data.table::fwrite(perf_df, file = paste0(config$path_save, "perf_df.csv"))
+#    data.table::fwrite(pred_df, file = paste0(config$path_save, "pred_df.csv"))
+#    data.table::fwrite(perf_df, file = paste0(config$path_save, "perf_df.csv"))
     #Completion message
     showModal(modalDialog(
       title = "Models are done",
