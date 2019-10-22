@@ -27,6 +27,7 @@ Imports:
     data.table,
     rmarkdown,
     purrr,
-    kableExtra
+    kableExtra,
+    caret
 Suggests: 
     testthat (>= 2.1.0)
